@@ -4,6 +4,7 @@ from collections import defaultdict, Counter
 from datetime import datetime
 import random
 import math
+from scipy.optimize import minimize
 
 
 # =========================================================
@@ -234,6 +235,35 @@ def extrair_assistencias(texto):
             pass
 
     return jogadores
+
+
+# =========================================================
+# MÉDIAS POR COMPETIÇÃO
+# =========================================================
+
+def calcular_medias_competicoes(tabela_df, jogos_df):
+    medias = {}
+    gols_total = 0
+    jogos_total = 0
+
+    # 1. Extrair das tabelas finais (Premier League, Ligue 1, Champions League)
+    for comp in tabela_df['competicao'].unique():
+        df_comp = tabela_df[tabela_df['competicao'] == comp]
+        soma_gols_pro = df_comp['gols_pro'].sum()
+        soma_jogos = df_comp['jogos'].sum()
+        
+        if soma_jogos > 0:
+            media_comp = soma_gols_pro / (soma_jogos / 2)
+            medias[comp] = media_comp
+            gols_total += soma_gols_pro
+            jogos_total += (soma_jogos / 2)
+
+    # Media global considerando apenas as principais competições
+    media_global = gols_total / jogos_total if jogos_total > 0 else 2.5
+    
+    return medias, media_global
+
+MEDIAS_COMPETICAO, MEDIA_GLOBAL = calcular_medias_competicoes(tabela, jogos)
 
 
 # =========================================================
@@ -648,30 +678,40 @@ def forca_time(
             row["resultado"]
         )
 
-        peso = peso_recencia(
+        peso_rec = peso_recencia(
             row["data_jogo"]
         )
+        
+        comp = row["competicao"]
+        if comp in MEDIAS_COMPETICAO:
+            media_comp = MEDIAS_COMPETICAO[comp]
+            fator_correcao = MEDIA_GLOBAL / media_comp if media_comp > 0 else 1.0
+        else:
+            if "Friendly" in comp or "Amistoso" in comp or "Emirates Cup" in comp:
+                fator_correcao = 0.5
+            else:
+                fator_correcao = 1.0
 
-        pesos.append(peso)
+        pesos.append(peso_rec)
 
         if row["time_casa"] == time:
 
             gols_feitos.append(
-                g1 * peso
+                g1 * fator_correcao * peso_rec
             )
 
             gols_sofridos.append(
-                g2 * peso
+                g2 * fator_correcao * peso_rec
             )
 
         else:
 
             gols_feitos.append(
-                g2 * peso
+                g2 * fator_correcao * peso_rec
             )
 
             gols_sofridos.append(
-                g1 * peso
+                g1 * fator_correcao * peso_rec
             )
 
     soma_pesos = sum(pesos)
@@ -1157,6 +1197,58 @@ for placar, qtd in (
 
 
 # =========================================================
+# REGRESSÃO POISSON LOG-LINEAR COMPARATIVA
+# =========================================================
+
+def calcular_poisson_loglinear(df_jogos):
+    
+    # Extrair os gols ajustados das duas equipes em seus históricos
+    gols_A = []
+    gols_B = []
+    
+    for _, row in df_jogos.iterrows():
+        g1, g2 = parse_resultado(row["resultado"])
+        comp = row["competicao"]
+        if comp in MEDIAS_COMPETICAO:
+            media_comp = MEDIAS_COMPETICAO[comp]
+            fator = MEDIA_GLOBAL / media_comp if media_comp > 0 else 1.0
+        else:
+            if "Friendly" in comp or "Amistoso" in comp or "Emirates Cup" in comp:
+                fator = 0.5
+            else:
+                fator = 1.0
+        
+        if row["time_casa"] == TIME_A:
+            gols_A.append(g1 * fator)
+        elif row["time_fora"] == TIME_A:
+            gols_A.append(g2 * fator)
+            
+        if row["time_casa"] == TIME_B:
+            gols_B.append(g1 * fator)
+        elif row["time_fora"] == TIME_B:
+            gols_B.append(g2 * fator)
+            
+    lambda_a_inicial = np.mean(gols_A) if gols_A else 1.0
+    lambda_b_inicial = np.mean(gols_B) if gols_B else 1.0
+    
+    # Função objetivo (Negative Log-Likelihood para Poisson)
+    def nll_poisson(params, observacoes):
+        L = params[0]
+        if L <= 0: return np.inf
+        # sum( L - y * log(L) ) ignorando log(y!)
+        return np.sum(L - observacoes * np.log(L))
+        
+    res_a = minimize(nll_poisson, [lambda_a_inicial], args=(np.array(gols_A),), method='Nelder-Mead')
+    res_b = minimize(nll_poisson, [lambda_b_inicial], args=(np.array(gols_B),), method='Nelder-Mead')
+    
+    l_a = res_a.x[0] if res_a.success else lambda_a_inicial
+    l_b = res_b.x[0] if res_b.success else lambda_b_inicial
+    
+    return l_a, l_b
+
+poisson_a, poisson_b = calcular_poisson_loglinear(jogos)
+
+# =========================================================
 # RELATÓRIO
 # =========================================================
 
@@ -1491,5 +1583,23 @@ print(
     f"• {SIMULACOES} simulações "
     f"Monte Carlo"
 )
+
+print("\n" + "-" * 80)
+print("COMPARAÇÃO DE MODELOS (MÉDIA DE GOLS)")
+print("-" * 80)
+
+print(f"Pesos dinâmicos calculados por Competição:")
+for c, m in sorted(MEDIAS_COMPETICAO.items(), key=lambda x: x[1], reverse=True):
+    # Fator é a média global / média da competição
+    fator = MEDIA_GLOBAL / m if m > 0 else 1.0
+    print(f"  {c:<35}: Média {m:.2f} gols/jogo (Fator Dificuldade: x{fator:.2f})")
+
+print(f"\nExpectativa de Gols {TIME_A}:")
+print(f"  - Monte Carlo Ponderado : {media_arsenal:.2f}")
+print(f"  - Poisson Log-Linear    : {poisson_a:.2f}")
+
+print(f"\nExpectativa de Gols {TIME_B}:")
+print(f"  - Monte Carlo Ponderado : {media_psg:.2f}")
+print(f"  - Poisson Log-Linear    : {poisson_b:.2f}")
 
 print("=" * 80)
