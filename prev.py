@@ -843,6 +843,14 @@ gols_jogadores = Counter()
 
 assist_jogadores = Counter()
 
+cnt_psg_liderou = 0
+cnt_arsenal_liderou = 0
+cnt_nenhum_liderou = 0
+
+cnt_psg_primeiro = 0
+cnt_arsenal_primeiro = 0
+cnt_sem_gol = 0
+
 
 for _ in range(SIMULACOES):
 
@@ -916,6 +924,39 @@ for _ in range(SIMULACOES):
             assist
         ] += 1
 
+    if gols_a == 0 and gols_b == 0:
+        cnt_nenhum_liderou += 1
+        cnt_sem_gol += 1
+    else:
+        gols_seq = ['P'] * gols_a + ['A'] * gols_b
+        random.shuffle(gols_seq)
+
+        # Primeiro gol da partida
+        if gols_seq[0] == 'P':
+            cnt_psg_primeiro += 1
+        else:
+            cnt_arsenal_primeiro += 1
+
+        score_psg = 0
+        score_ars = 0
+        psg_lid = False
+        ars_lid = False
+
+        for gol in gols_seq:
+            if gol == 'P':
+                score_psg += 1
+            else:
+                score_ars += 1
+
+            if score_psg > score_ars:
+                psg_lid = True
+            elif score_ars > score_psg:
+                ars_lid = True
+
+        if psg_lid:
+            cnt_psg_liderou += 1
+        if ars_lid:
+            cnt_arsenal_liderou += 1
 
 # =========================================================
 # PRORROGAÇÃO E PÊNALTIS
@@ -1288,6 +1329,30 @@ prob_emp = (
 
 prob_v_b = (
     v_b / SIMULACOES
+) * 100
+
+prob_psg_liderou = (
+    cnt_psg_liderou / SIMULACOES
+) * 100
+
+prob_arsenal_liderou = (
+    cnt_arsenal_liderou / SIMULACOES
+) * 100
+
+prob_nenhum_liderou = (
+    cnt_nenhum_liderou / SIMULACOES
+) * 100
+
+prob_psg_primeiro = (
+    cnt_psg_primeiro / SIMULACOES
+) * 100
+
+prob_arsenal_primeiro = (
+    cnt_arsenal_primeiro / SIMULACOES
+) * 100
+
+prob_sem_gol = (
+    cnt_sem_gol / SIMULACOES
 ) * 100
 
 print(

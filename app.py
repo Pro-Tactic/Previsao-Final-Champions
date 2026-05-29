@@ -153,6 +153,16 @@ def simulate():
                 "empate": prev.prob_emp,
                 "b": prev.prob_v_b
             },
+            "lideranca": {
+                "psg": prev.prob_psg_liderou,
+                "arsenal": prev.prob_arsenal_liderou,
+                "nenhum": prev.prob_nenhum_liderou
+            },
+            "primeiro_gol": {
+                "psg": prev.prob_psg_primeiro,
+                "arsenal": prev.prob_arsenal_primeiro,
+                "sem_gol": prev.prob_sem_gol
+            },
             "placar_mais_comum": prev.placar_mais_comum,
             "artilheiro_principal": prev.artilheiro,
             "assistente_principal": prev.assistencia,

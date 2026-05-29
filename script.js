@@ -397,6 +397,19 @@ function updateDashboardData(data) {
         ${data.time_a}: ATK ${data.forcas.a.atk.toFixed(2)} | DEF ${data.forcas.a.def.toFixed(2)} <br>
         ${data.time_b}: ATK ${data.forcas.b.atk.toFixed(2)} | DEF ${data.forcas.b.def.toFixed(2)}
     `;
+    // Leadership in Match
+    if (data.lideranca) {
+        document.getElementById("lead-psg-pct").textContent = data.lideranca.psg.toFixed(2) + "%";
+        document.getElementById("lead-arsenal-pct").textContent = data.lideranca.arsenal.toFixed(2) + "%";
+        document.getElementById("lead-nenhum-pct").textContent = data.lideranca.nenhum.toFixed(2) + "%";
+    }
+
+    // First Goal of Match
+    if (data.primeiro_gol) {
+        document.getElementById("first-psg-pct").textContent = data.primeiro_gol.psg.toFixed(2) + "%";
+        document.getElementById("first-arsenal-pct").textContent = data.primeiro_gol.arsenal.toFixed(2) + "%";
+        document.getElementById("first-semgol-pct").textContent = data.primeiro_gol.sem_gol.toFixed(2) + "%";
+    }
 
     // Render Lists: Scorers and Assisters
     renderProbabilitiesList("scorers-list", data.artilheiros, "green");
