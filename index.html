@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Dashboard estatístico avançado de previsões de futebol utilizando Cadeia de Markov, Distribuição de Poisson e Simulações de Monte Carlo.">
+    <title>Protactic Champions League - Predictor Dashboard</title>
+    <link rel="icon" href="logo_preta.svg" type="image/svg+xml">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="stars-container"></div>
+    
+    <header class="app-header">
+        <div class="header-content">
+            <div class="brand">
+                <img id="app-logo" src="logo.png" alt="Protactic Logo" onerror="this.style.display='none'">
+                <div class="brand-text">
+                    <span class="brand-sub">CHAMPIONS LEAGUE PREDICTOR</span>
+                    <h1 class="brand-title">PROTACTIC ENGINE</h1>
+                </div>
+            </div>
+            <div class="simulation-status">
+                <span class="status-dot green"></span>
+                <span class="status-text">Algoritmo Pronto</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-layout">
+        <!-- SEÇÃO ESQUERDA: CONTROLE -->
+        <section class="control-panel">
+            <div class="glass-card panel-header-card">
+                <h2 class="section-title">CONFIGURAÇÕES DA SIMULAÇÃO</h2>
+                <p class="panel-desc">Ajuste os parâmetros em tempo real para re-calcular as probabilidades matemáticas do confronto.</p>
+            </div>
+
+            <!-- SELETOR DE DESFALQUES -->
+            <div class="glass-card">
+                <h3 class="card-title">
+                    <span class="title-icon">🚨</span> 
+                    Gerenciador de Desfalques
+                </h3>
+                <p class="input-label">Remova jogadores escalados para simular lesões ou suspensões:</p>
+                
+                <div class="injury-manager">
+                    <!-- Dropdown customizado para seleção de jogadores -->
+                    <div class="custom-select-wrapper">
+                        <div class="custom-select-trigger" id="injury-trigger" tabindex="0" role="combobox" aria-expanded="false" aria-haspopup="listbox" aria-label="Selecionar jogador para desfalque">
+                            <span>Selecionar jogador...</span>
+                            <div class="arrow"></div>
+                        </div>
+                        <div class="custom-options" id="injury-options">
+                            <div class="options-search-box">
+                                <input type="text" id="player-search" placeholder="Pesquisar jogador...">
+                            </div>
+                            <div class="options-container" id="players-list-options">
+                                <!-- Preenchido dinamicamente via JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lista de desfalques ativos -->
+                    <div class="active-injuries-container">
+                        <h4 class="sub-label">Desfalques Ativos:</h4>
+                        <div id="active-injuries-list" class="active-injuries-list">
+                            <span class="no-injuries-placeholder">Nenhum jogador indisponível. Todos estão aptos a jogar!</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTROLE DE SIMULAÇÕES -->
+            <div class="glass-card">
+                <h3 class="card-title">
+                    <span class="title-icon">⚙️</span>
+                    Motor Monte Carlo
+                </h3>
+                <div class="sim-slider-container">
+                    <div class="slider-header">
+                        <span class="input-label">Número de Iterações:</span>
+                        <span class="slider-value" id="sim-slider-value">100.000</span>
+                    </div>
+                    <input type="range" id="sim-slider" min="10000" max="100000" step="10000" value="100000" class="custom-slider" aria-valuetext="100 mil simulações" aria-label="Número de Iterações">
+                    <span class="slider-caption">Mais simulações garantem maior precisão estatística nos resultados.</span>
+                </div>
+
+                <button id="run-simulation-btn" class="btn-primary animate-glow" aria-label="Iniciar Simulação">
+                    <span class="btn-text">INICIAR SIMULAÇÃO</span>
+                    <span class="loader-spinner hidden"></span>
+                </button>
+            </div>
+            
+            <!-- EXPLICADOR DO MODELO -->
+            <div class="glass-card model-info-card">
+                <h3 class="card-title">
+                    <span class="title-icon">🧠</span>
+                    O Modelo Matemático
+                </h3>
+                <div class="model-pillars">
+                    <div class="pillar">
+                        <span class="pillar-num">1</span>
+                        <div class="pillar-text">
+                            <strong>Recência Temporal:</strong> Jogos recentes pesam exponencialmente mais no cálculo da força.
+                        </div>
+                    </div>
+                    <div class="pillar">
+                        <span class="pillar-num">2</span>
+                        <div class="pillar-text">
+                            <strong>Markov Chains:</strong> A variação tática e formações são previstas por histórico de transição.
+                        </div>
+                    </div>
+                    <div class="pillar">
+                        <span class="pillar-num">3</span>
+                        <div class="pillar-text">
+                            <strong>Monte Carlo:</strong> 100.000 simulações de Poisson são computadas para consolidar as chances de vitória.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SEÇÃO DIREITA: RESULTADOS -->
+        <section class="results-panel">
+            
+            <!-- TELA DE LOADING INICIAL -->
+            <div class="simulation-loading-screen" id="loading-overlay">
+                <div class="loader-circle"></div>
+                <h3 class="loading-title">COMPUTANDO SIMULAÇÕES MONTE CARLO</h3>
+                <p class="loading-desc">Executando distribuição de Poisson e mapeamento de slots táticos...</p>
+            </div>
+
+            <!-- RESULTADOS PRINCIPAIS -->
+            <div class="dashboard-grid" id="dashboard-results">
+                
+                <!-- ROW 1: PROBABILIDADES DE VITÓRIA -->
+                <div class="glass-card span-all-cols win-prob-card">
+                    <h2 class="section-title text-center">PROBABILIDADES DO CONFRONTO</h2>
+                    
+                    <div class="matchup-banner">
+                        <div class="team-banner-left">
+                            <img class="team-crest" src="https://api.sofascore.app/api/v1/team/1644/image" alt="PSG Crest">
+                            <span class="team-name" id="label-team-a">Paris SG</span>
+                        </div>
+                        <div class="vs-badge">VS</div>
+                        <div class="team-banner-right">
+                            <span class="team-name" id="label-team-b">Arsenal</span>
+                            <img class="team-crest" src="https://api.sofascore.app/api/v1/team/42/image" alt="Arsenal Crest">
+                        </div>
+                    </div>
+
+                    <div class="probability-track-wrapper">
+                        <div class="probability-track">
+                            <div id="bar-prob-a" class="prob-segment segment-a" style="width: 34%;">
+                                <span class="segment-pct">34.11%</span>
+                            </div>
+                            <div id="bar-prob-draw" class="prob-segment segment-draw" style="width: 25%;">
+                                <span class="segment-pct">24.82%</span>
+                            </div>
+                            <div id="bar-prob-b" class="prob-segment segment-b" style="width: 41%;">
+                                <span class="segment-pct">41.07%</span>
+                            </div>
+                        </div>
+                        <div class="track-legend">
+                            <span class="legend-item"><span class="legend-dot blue"></span> Vitória PSG</span>
+                            <span class="legend-item"><span class="legend-dot gray"></span> Empate</span>
+                            <span class="legend-item"><span class="legend-dot green"></span> Vitória Arsenal</span>
+                        </div>
+                    </div>
+
+                    <!-- CARDS DE INFORMAÇÕES RÁPIDAS -->
+                    <div class="quick-stats-grid">
+                        <div class="quick-stat-box">
+                            <span class="stat-label">Placar Mais Provável</span>
+                            <span class="stat-value neon-white" id="stat-most-probable-score">1 x 1</span>
+                        </div>
+                        <div class="quick-stat-box">
+                            <span class="stat-label">Favorito Estatístico</span>
+                            <span class="stat-value neon-green" id="stat-fav-team">PSG</span>
+                            <span class="stat-sub" id="stat-fav-chance">com 41.07%</span>
+                        </div>
+                        <div class="quick-stat-box">
+                            <span class="stat-label">Gols Esperados (xG)</span>
+                            <span class="stat-value text-small" id="stat-expected-goals">ARS 1.36 | PSG 1.52</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ROW 2: TACTICAL FIELD (CAMPO DE FUTEBOL) -->
+                <div class="glass-card tactical-pitch-card">
+                    <div class="card-header-with-actions">
+                        <h3 class="card-title">
+                            <span class="title-icon">⚽</span>
+                            Campo Tático & Escalações
+                        </h3>
+                        <div class="tab-controls">
+                            <button class="tab-btn active" id="btn-tab-psg">PSG</button>
+                            <button class="tab-btn" id="btn-tab-arsenal">Arsenal</button>
+                        </div>
+                    </div>
+                    
+                    <div class="pitch-container">
+                        <!-- Campo de Futebol em CSS -->
+                        <div class="football-pitch" id="pitch-board">
+                            <!-- Linhas do Campo -->
+                            <div class="pitch-line center-circle"></div>
+                            <div class="pitch-line penalty-box penalty-box-home"></div>
+                            <div class="pitch-line penalty-box penalty-box-away"></div>
+                            
+                            <!-- Jogadores renderizados dinamicamente pelo script.js -->
+                            <div class="players-overlay" id="pitch-players-overlay">
+                                <!-- Nodes de jogadores inseridos dinamicamente -->
+                            </div>
+                        </div>
+                        
+                        <div class="formation-badge" id="current-pitch-formation">4-2-3-1</div>
+                    </div>
+                </div>
+
+                <!-- ROW 3: DETALHES DE DADOS E GRÁFICOS -->
+                <div class="glass-card chart-card">
+                    <h3 class="card-title">
+                        <span class="title-icon">📈</span>
+                        Distribuição de Placares
+                    </h3>
+                    <p class="chart-desc">As 10 combinações exatas mais frequentes geradas pelas simulações.</p>
+                    <div class="chart-wrapper">
+                        <canvas id="scoresChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- ROW 4: ARTILHEIROS & ASSISTÊNCIAS -->
+                <div class="glass-card list-card">
+                    <h3 class="card-title">
+                        <span class="title-icon">🎯</span>
+                        Artilheiros Prováveis
+                    </h3>
+                    <div class="probability-list" id="scorers-list">
+                        <!-- Inserido dinamicamente -->
+                    </div>
+                </div>
+
+                <div class="glass-card list-card">
+                    <h3 class="card-title">
+                        <span class="title-icon">👟</span>
+                        Garçons Prováveis
+                    </h3>
+                    <div class="probability-list" id="assisters-list">
+                        <!-- Inserido dinamicamente -->
+                    </div>
+                </div>
+                
+                <!-- ROW 5: CENÁRIOS ESPECIAIS & DETALHES DO MODELO -->
+                <div class="glass-card span-all-cols details-dashboard">
+                    <h3 class="card-title">
+                        <span class="title-icon">🏆</span>
+                        Cenário Decisivo (Mata-Mata)
+                    </h3>
+                    <div class="knockout-grid">
+                        <div class="knockout-box">
+                            <span class="k-label">Prorrogação Mais Provável</span>
+                            <span class="k-value" id="stat-k-overtime">0 x 0</span>
+                            <span class="k-desc">Baseado em 0.33x da força ofensiva na prorrogação</span>
+                        </div>
+                        <div class="knockout-box">
+                            <span class="k-label">Vencedor Provável nos Pênaltis</span>
+                            <span class="k-value neon-blue" id="stat-k-penalties">PSG</span>
+                            <span class="k-desc">Calculado pela média de ataque e resiliência defensiva</span>
+                        </div>
+                        <div class="knockout-box">
+                            <span class="k-label">Força Geral (Ataque/Defesa)</span>
+                            <span class="k-desc-large" id="stat-forces-detail">
+                                PSG: ATK 2.29 / DEF 1.07 <br>
+                                Arsenal: ATK 1.65 / DEF 0.75
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <div class="footer-content">
+            <p>&copy; 2026 PROTACTIC Champions League Predictor Engine. Todos os direitos reservados.</p>
+            <p class="footer-note">Desenvolvido com base no algoritmo estatístico da Protactic.</p>
+        </div>
+    </footer>
+    
+    <!-- TOOLTIP DINÂMICO PARA OS JOGADORES NO CAMPO -->
+    <div class="pitch-tooltip" id="pitch-tooltip">
+        <!-- Preenchido dinamicamente ao dar hover -->
+    </div>
+    
+    <!-- Script principal de lógica -->
+    <script src="script.js"></script>
+</body>
+</html>
