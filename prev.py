@@ -20,8 +20,7 @@ TIME_B = "Arsenal"
 
 TITULARES_ABSOLUTOS = [
     "Nuno Mendes", "Achraf Hakimi", "Marquinhos", "Willian Pacho", 
-    "Vitinha", "João Neves", "Fabián Ruiz", "Ousmane Dembélé", 
-    "Khvicha Kvaratskhelia", "Désiré Doué", 
+    "Vitinha", "Désiré Doué", "João Neves", "Ousmane Dembélé", "Khvicha Kvaratskhelia", 
     "David Raya", "Gabriel Magalhães", "William Saliba", 
     "Declan Rice", "Bukayo Saka", "Viktor Gyökeres"
 ]
