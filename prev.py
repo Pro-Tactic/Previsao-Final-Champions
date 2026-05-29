@@ -19,7 +19,7 @@ TIME_A = "Paris Saint-Germain"
 TIME_B = "Arsenal"
 
 TITULARES_ABSOLUTOS = [
-    "Nuno Mendes", "Achraf Hakimi", "Marquinhos", "Willian Pacho", 
+    "Nuno Mendes", "Marquinhos", "Willian Pacho", 
     "Vitinha", "Désiré Doué", "João Neves", "Ousmane Dembélé", "Khvicha Kvaratskhelia", 
     "David Raya", "Gabriel Magalhães", "William Saliba", 
     "Declan Rice", "Bukayo Saka", "Viktor Gyökeres"
