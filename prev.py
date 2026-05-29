@@ -18,6 +18,14 @@ SIMULACOES = 100000
 TIME_A = "Paris Saint-Germain"
 TIME_B = "Arsenal"
 
+TITULARES_ABSOLUTOS = [
+    "Nuno Mendes", "Achraf Hakimi", "Marquinhos", "Willian Pacho", 
+    "Vitinha", "João Neves", "Fabián Ruiz", "Ousmane Dembélé", 
+    "Khvicha Kvaratskhelia", "Désiré Doué", 
+    "David Raya", "Gabriel Magalhães", "William Saliba", 
+    "Declan Rice", "Bukayo Saka", "Viktor Gyökeres"
+]
+
 
 # =========================================================
 # LESÕES / DESFALQUES
@@ -549,7 +557,6 @@ def escalacao_tatica(
                 jogador not in
                 jogadores_fora
             ):
-
                 pesos_slot[slot][
                     jogador
                 ] += peso
@@ -560,8 +567,15 @@ def escalacao_tatica(
 
     for slot in slots:
 
+        candidatos_com_bonus = []
+        for jogador, pontuacao in pesos_slot[slot].items():
+            # Hierarquia: multiplica a pontuação final na posição por 5
+            # Isso garante que ele vença os reservas, mas não roube posições (ex: Rice na LD) onde sua base é 0.1
+            multiplicador = 5.0 if jogador in TITULARES_ABSOLUTOS else 1.0
+            candidatos_com_bonus.append((jogador, pontuacao * multiplicador))
+
         candidatos = sorted(
-            pesos_slot[slot].items(),
+            candidatos_com_bonus,
             key=lambda x: x[1],
             reverse=True
         )

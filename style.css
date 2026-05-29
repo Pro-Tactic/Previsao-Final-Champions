@@ -183,6 +183,7 @@ h1, h2, h3, h4 {
     background: linear-gradient(135deg, var(--color-white) 30%, var(--color-gray) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    white-space: nowrap;
 }
 
 .simulation-status {
@@ -1289,6 +1290,28 @@ h1, h2, h3, h4 {
     }
 }
 
+@media (max-width: 900px) {
+    .app-header {
+        padding: 12px 16px;
+    }
+
+    #app-logo {
+        height: 36px;
+    }
+
+    .brand-title {
+        font-size: 1.2rem;
+    }
+
+    .brand-sub {
+        font-size: 0.58rem;
+    }
+
+    .status-text {
+        font-size: 0.7rem;
+    }
+}
+
 @media (max-width: 768px) {
     .config-panel {
         max-width: 100%;
@@ -1301,13 +1324,48 @@ h1, h2, h3, h4 {
     .pitch {
         min-height: 400px;
     }
+
+    .app-header {
+        padding: 10px 14px;
+    }
+
+    .brand-title {
+        font-size: 1.05rem;
+    }
+
+    .brand-sub {
+        font-size: 0.55rem;
+        letter-spacing: 0.12em;
+    }
+
+    #app-logo {
+        height: 32px;
+    }
 }
 
 @media (max-width: 600px) {
     .header-content {
         flex-direction: column;
-        gap: 16px;
-        align-items: center;
+        gap: 10px;
+        align-items: flex-start;
+    }
+
+    .brand {
+        gap: 10px;
+    }
+
+    #app-logo {
+        height: 32px;
+    }
+
+    .brand-title {
+        font-size: 1.1rem;
+        white-space: normal;
+    }
+
+    .simulation-status {
+        align-self: flex-start;
+        padding: 5px 10px;
     }
     
     .quick-stats-grid {
